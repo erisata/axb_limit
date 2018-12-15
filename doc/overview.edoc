@@ -1,0 +1,6 @@
+@title AxB Limit
+@doc
+This application provides a number of tools for managing
+load in an application, like rate limiters, etc.
+
+@end
