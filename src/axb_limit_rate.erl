@@ -34,7 +34,7 @@
 %%%
 -module(axb_limit_rate).
 -behaviour(gen_server).
--export([start_link/2, start_link/1, set_rate/2, ask/2]).
+-export([start_link/2, start_link/1, set_rate/2, ask/2, await/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 
@@ -47,7 +47,12 @@
 %%  The Rate is specified as a number of events per second.
 %%  One can use Rate smaller than 1 to have events with delays more thant second.
 %%
--spec start_link(Ref :: term(), Rate :: number()) -> {ok, pid()} | {error, Reason :: term()}.
+-spec start_link(
+        Ref :: term(),
+        Rate :: number()
+    ) ->
+        {ok, pid()} |
+        {error, Reason :: term()}.
 
 start_link(Ref, Rate) ->
     gen_server:start_link(Ref, ?MODULE, {Rate}, []).
@@ -56,7 +61,11 @@ start_link(Ref, Rate) ->
 %%  @doc
 %%  Start the process without registering it.
 %%
--spec start_link(Rate :: number()) -> {ok, pid()} | {error, Reason :: term()}.
+-spec start_link(
+        Rate :: number()
+    ) ->
+        {ok, pid()} |
+        {error, Reason :: term()}.
 
 start_link(Rate) ->
     gen_server:start_link(?MODULE, {Rate}, []).
@@ -70,10 +79,36 @@ set_rate(Ref, Rate) ->
 
 
 %%  @doc
-%%  Ask for execution.
+%%  Ask for execution for permission to proceed.
+%%  This function does not block, if needed
+%%  it tells the caller to wait.
 %%
+%%  Here Ref is a reference of the limiter process
+%%  and Who is a name of thing to limit.
+%%
+-spec ask(
+        Ref :: term(),
+        Who :: term()
+    ) ->
+        ok |
+        {delay, DelayMS :: integer()}.
+
 ask(Ref, Who) ->
-    case gen_server:call(Ref, {ask, Who}, infinity) of
+    gen_server:call(Ref, {ask, Who}).
+
+
+%%  @doc
+%%  Await for permission to proceed.
+%%  This function will block, if the rate limit is reached.
+%%
+-spec await(
+        Ref :: term(),
+        Who :: term()
+    ) ->
+        ok.
+
+await(Ref, Who) ->
+    case ask(Ref, Who) of
         {delay, DelayMS} ->
             timer:sleep(DelayMS),
             ok;
@@ -208,9 +243,9 @@ basic_test_() ->
         [
             {"Check, if rate limiting works.", fun () ->
                 {DurationUS, ok} = timer:tc(fun () ->
-                    axb_limit_rate:ask(basic_test_limiter, basic_test),
-                    axb_limit_rate:ask(basic_test_limiter, basic_test),
-                    axb_limit_rate:ask(basic_test_limiter, basic_test)
+                    axb_limit_rate:await(basic_test_limiter, basic_test),
+                    axb_limit_rate:await(basic_test_limiter, basic_test),
+                    axb_limit_rate:await(basic_test_limiter, basic_test)
                 end),
                 ?assert(DurationUS >  900000),
                 ?assert(DurationUS < 1400000)
