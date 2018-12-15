@@ -17,11 +17,11 @@ itest: ct
 
 eunit: compile
 	mkdir -p logs
-	env ERL_LIBS=deps ERL_AFLAGS='-config test/sys -s lager' $(REBAR) eunit skip_deps=true verbose=1
+	$(REBAR) eunit skip_deps=true verbose=1
 
 ct: compile
 	mkdir -p logs
-	env ERL_LIBS=deps ERL_AFLAGS='-config test/sys -s lager' $(REBAR) ct skip_deps=true $(CT_ARGS) || grep Testing logs/raw.log
+	$(REBAR) ct skip_deps=true $(CT_ARGS) || grep Testing logs/raw.log
 
 doc:
 	$(REBAR) doc
