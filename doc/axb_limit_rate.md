@@ -34,7 +34,7 @@ process, for which the limit should be applied.
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ask-2">ask/2</a></td><td>
 Ask for execution for permission to proceed.</td></tr><tr><td valign="top"><a href="#await-2">await/2</a></td><td>
 Await for permission to proceed.</td></tr><tr><td valign="top"><a href="#set_rate-2">set_rate/2</a></td><td>
-Set new rate.</td></tr><tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td>
+Set new rate for the limiter.</td></tr><tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td>
 Start the process without registering it.</td></tr><tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>
 Start the server and register it as <code>Ref</code>.</td></tr></table>
 
@@ -75,9 +75,13 @@ This function will block, if the rate limit is reached.
 
 ### set_rate/2 ###
 
-`set_rate(Ref, Rate) -> any()`
+<pre><code>
+set_rate(Ref::term(), Rate::number()) -&gt; ok
+</code></pre>
+<br />
 
-Set new rate.
+Set new rate for the limiter.
+The rate is set asynchronously.
 
 <a name="start_link-1"></a>
 

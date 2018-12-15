@@ -72,8 +72,15 @@ start_link(Rate) ->
 
 
 %%  @doc
-%%  Set new rate.
+%%  Set new rate for the limiter.
+%%  The rate is set asynchronously.
 %%
+-spec set_rate(
+        Ref  :: term(),
+        Rate :: number()
+    ) ->
+        ok.
+
 set_rate(Ref, Rate) ->
     gen_server:cast(Ref, {set_rate, Rate}).
 
