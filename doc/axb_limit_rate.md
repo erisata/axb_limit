@@ -17,7 +17,7 @@ Example:
 ```
       `
    axb_limit_rate:start_link({local, my_limiter}, 3). % We want 3 tps max.
-   axb_limit_rate:ask(my_limiter, my_caller). % Can block for some time, if limit is reached.
+   axb_limit_rate:await(my_limiter, my_caller). % Can block for some time, if limit is reached.
 ```
 
 '
@@ -33,16 +33,10 @@ process, for which the limit should be applied.
 
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ask-2">ask/2</a></td><td>
 Ask for execution for permission to proceed.</td></tr><tr><td valign="top"><a href="#await-2">await/2</a></td><td>
-Await for permission to proceed.</td></tr><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>
-Code upgrades.</td></tr><tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td>
-Synchronous calls.</td></tr><tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td>
-Asynchronous events.</td></tr><tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>
-Other messages.</td></tr><tr><td valign="top"><a href="#init-1">init/1</a></td><td>
-Initialization.</td></tr><tr><td valign="top"><a href="#set_rate-2">set_rate/2</a></td><td>
+Await for permission to proceed.</td></tr><tr><td valign="top"><a href="#set_rate-2">set_rate/2</a></td><td>
 Set new rate.</td></tr><tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td>
 Start the process without registering it.</td></tr><tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>
-Start the server and register it as <code>Ref</code>.</td></tr><tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>
-Process termination.</td></tr></table>
+Start the server and register it as <code>Ref</code>.</td></tr></table>
 
 
 <a name="functions"></a>
@@ -77,46 +71,6 @@ await(Ref::term(), Who::term()) -&gt; ok
 Await for permission to proceed.
 This function will block, if the rate limit is reached.
 
-<a name="code_change-3"></a>
-
-### code_change/3 ###
-
-`code_change(OldVsn, State, Extra) -> any()`
-
-Code upgrades.
-
-<a name="handle_call-3"></a>
-
-### handle_call/3 ###
-
-`handle_call(Unknown, From, State) -> any()`
-
-Synchronous calls.
-
-<a name="handle_cast-2"></a>
-
-### handle_cast/2 ###
-
-`handle_cast(Unknown, State) -> any()`
-
-Asynchronous events.
-
-<a name="handle_info-2"></a>
-
-### handle_info/2 ###
-
-`handle_info(Unknown, State) -> any()`
-
-Other messages.
-
-<a name="init-1"></a>
-
-### init/1 ###
-
-`init(X1) -> any()`
-
-Initialization.
-
 <a name="set_rate-2"></a>
 
 ### set_rate/2 ###
@@ -148,12 +102,4 @@ start_link(Ref::term(), Rate::number()) -&gt; {ok, pid()} | {error, Reason::term
 Start the server and register it as `Ref`.
 The Rate is specified as a number of events per second.
 One can use Rate smaller than 1 to have events with delays more thant second.
-
-<a name="terminate-2"></a>
-
-### terminate/2 ###
-
-`terminate(Reason, State) -> any()`
-
-Process termination.
 

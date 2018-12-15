@@ -20,7 +20,7 @@
 %%% Example:
 %%% ````
 %%% axb_limit_rate:start_link({local, my_limiter}, 3). % We want 3 tps max.
-%%% axb_limit_rate:ask(my_limiter, my_caller). % Can block for some time, if limit is reached.
+%%% axb_limit_rate:await(my_limiter, my_caller). % Can block for some time, if limit is reached.
 %%% ''''
 %%%
 %%% In a typical case, these two function calls will be wrapper in
@@ -137,7 +137,7 @@ await(Ref, Who) ->
 %%% Callbacks for `gen_server'.
 %%% =============================================================================
 
-%%  @doc
+%%  @private
 %%  Initialization.
 %%
 init({Rate}) ->
@@ -149,7 +149,7 @@ init({Rate}) ->
     {ok, NewState}.
 
 
-%%  @doc
+%%  @private
 %%  Synchronous calls.
 %%
 handle_call({ask, Who}, _From, State = #state{sleep = Sleep, last_ms = LastMS}) ->
@@ -172,7 +172,7 @@ handle_call(_Unknown, _From, State) ->
     {reply, undefined, State}.
 
 
-%%  @doc
+%%  @private
 %%  Asynchronous events.
 %%
 handle_cast({set_rate, Rate}, State) ->
@@ -186,21 +186,21 @@ handle_cast(_Unknown, State) ->
     {noreply, State}.
 
 
-%%  @doc
+%%  @private
 %%  Other messages.
 %%
 handle_info(_Unknown, State) ->
     {noreply, State}.
 
 
-%%  @doc
+%%  @private
 %%  Process termination.
 %%
 terminate(_Reason, _State) ->
     ok.
 
 
-%%  @doc
+%%  @private
 %%  Code upgrades.
 %%
 code_change(_OldVsn, State, _Extra) ->
