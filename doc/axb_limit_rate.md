@@ -32,13 +32,15 @@ process, for which the limit should be applied.
 
 
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ask-2">ask/2</a></td><td>
-Ask for execution.</td></tr><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>
+Ask for execution for permission to proceed.</td></tr><tr><td valign="top"><a href="#await-2">await/2</a></td><td>
+Await for permission to proceed.</td></tr><tr><td valign="top"><a href="#code_change-3">code_change/3</a></td><td>
 Code upgrades.</td></tr><tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td>
 Synchronous calls.</td></tr><tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td>
 Asynchronous events.</td></tr><tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td>
 Other messages.</td></tr><tr><td valign="top"><a href="#init-1">init/1</a></td><td>
 Initialization.</td></tr><tr><td valign="top"><a href="#set_rate-2">set_rate/2</a></td><td>
-Set new rate.</td></tr><tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>
+Set new rate.</td></tr><tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td>
+Start the process without registering it.</td></tr><tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>
 Start the server and register it as <code>Ref</code>.</td></tr><tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>
 Process termination.</td></tr></table>
 
@@ -51,9 +53,29 @@ Process termination.</td></tr></table>
 
 ### ask/2 ###
 
-`ask(Ref, Who) -> any()`
+<pre><code>
+ask(Ref::term(), Who::term()) -&gt; ok | {delay, DelayMS::integer()}
+</code></pre>
+<br />
 
-Ask for execution.
+Ask for execution for permission to proceed.
+This function does not block, if needed
+it tells the caller to wait.
+
+Here Ref is a reference of the limiter process
+and Who is a name of thing to limit.
+
+<a name="await-2"></a>
+
+### await/2 ###
+
+<pre><code>
+await(Ref::term(), Who::term()) -&gt; ok
+</code></pre>
+<br />
+
+Await for permission to proceed.
+This function will block, if the rate limit is reached.
 
 <a name="code_change-3"></a>
 
@@ -102,6 +124,17 @@ Initialization.
 `set_rate(Ref, Rate) -> any()`
 
 Set new rate.
+
+<a name="start_link-1"></a>
+
+### start_link/1 ###
+
+<pre><code>
+start_link(Rate::number()) -&gt; {ok, pid()} | {error, Reason::term()}
+</code></pre>
+<br />
+
+Start the process without registering it.
 
 <a name="start_link-2"></a>
 
