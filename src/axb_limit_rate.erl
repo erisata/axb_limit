@@ -34,7 +34,7 @@
 %%%
 -module(axb_limit_rate).
 -behaviour(gen_server).
--export([start_link/2, start_link/1, set_rate/2, ask/2, await/2]).
+-export([start_link/2, start_link/1, set_rate/2, ask/2, ask/3, await/2, await/3]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 
@@ -86,12 +86,8 @@ set_rate(Ref, Rate) ->
 
 
 %%  @doc
-%%  Ask for execution for permission to proceed.
-%%  This function does not block, if needed
-%%  it tells the caller to wait.
-%%
-%%  Here Ref is a reference of the limiter process
-%%  and Who is a name of thing to limit.
+%%  Same as ask/3, except that the rate matches the one
+%%  passed to start_link/2 when starting the process.
 %%
 -spec ask(
         Ref :: term(),
@@ -101,12 +97,36 @@ set_rate(Ref, Rate) ->
         {delay, DelayMS :: integer()}.
 
 ask(Ref, Who) ->
-    gen_server:call(Ref, {ask, Who}).
+    ask(Ref, Who, undefined).
 
 
 %%  @doc
-%%  Await for permission to proceed.
-%%  This function will block, if the rate limit is reached.
+%%  Ask for execution for permission to proceed.
+%%  This function does not block, if needed
+%%  it tells the caller to wait.
+%%
+%%  Here Ref is a reference of the limiter process
+%%  Who is a name of thing to limit and Rate is 
+%%  the frequency of the event per second (see 
+%%  documentation of start_link/2) or undefined, if
+%%  it matches the Rate passed to start_link/2 when
+%%  starting this process.
+%%
+-spec ask(
+        Ref  :: term(),
+        Who  :: term(),
+        Rate :: number() | undefined
+    ) ->
+        ok |
+        {delay, DelayMS :: integer()}.
+
+ask(Ref, Who, Rate) ->
+    gen_server:call(Ref, {ask, Who, Rate}).
+
+
+%%  @doc
+%%  Same as await/3, except that the rate matches the one
+%%  passed to start_link/2 when starting the process.
 %%
 -spec await(
         Ref :: term(),
@@ -115,7 +135,24 @@ ask(Ref, Who) ->
         ok.
 
 await(Ref, Who) ->
-    case ask(Ref, Who) of
+    await(Ref, Who, undefined).
+
+
+%%  @doc
+%%  Await for permission to proceed.
+%%  This function will block, if the rate limit is reached.
+%%
+%%  The parameters matches the ones in ask/3.
+%%
+-spec await(
+        Ref  :: term(),
+        Who  :: term(),
+        Rate :: number() | undefined
+    ) ->
+        ok.
+
+await(Ref, Who, Rate) ->
+    case ask(Ref, Who, Rate) of
         {delay, DelayMS} ->
             timer:sleep(DelayMS),
             ok;
@@ -159,7 +196,11 @@ init({Rate}) ->
 %%  @private
 %%  Synchronous calls.
 %%
-handle_call({ask, Who}, _From, State = #state{sleep = Sleep, last_ms = LastMS}) ->
+handle_call({ask, Who, Rate}, _From, State = #state{sleep = DefaultSleep, last_ms = LastMS}) ->
+    Sleep = case Rate of
+        undefined -> DefaultSleep;
+        _         -> sleep_ms(Rate)
+    end,
     NowMS = erlang:monotonic_time(millisecond),
     WhosLastMS = maps:get(Who, LastMS, NowMS - Sleep),
     DiffMS = NowMS - WhosLastMS,
@@ -256,7 +297,28 @@ basic_test_() ->
                 end),
                 ?assert(DurationUS >  900000),
                 ?assert(DurationUS < 1400000)
-            end}
+            end},
+            {"Check, if rate limiting works with not default rate.", fun () ->
+                Rate = 4,
+                {DurationUS, ok} = timer:tc(fun () ->
+                    axb_limit_rate:await(basic_test_limiter, no_default, Rate),
+                    axb_limit_rate:await(basic_test_limiter, no_default, Rate),
+                    axb_limit_rate:await(basic_test_limiter, no_default, Rate)
+                end),
+                ?assert(DurationUS > 400000),
+                ?assert(DurationUS < 700000)
+            end},
+            % NOTE: this test is lengthy (~7 seconds), but it also tests the fractional (not integer) rates.
+            {timeout, 10, {"Check, if rate limiting works with varied rates.", fun () ->
+                {DurationUS, ok} = timer:tc(fun () ->
+                    axb_limit_rate:await(basic_test_limiter, varied_rates),
+                    axb_limit_rate:await(basic_test_limiter, varied_rates, 1),
+                    axb_limit_rate:await(basic_test_limiter, varied_rates, 0.5),
+                    axb_limit_rate:await(basic_test_limiter, varied_rates, 0.25)
+                end),
+                ?assert(DurationUS > 6500000),
+                ?assert(DurationUS < 7500000)
+            end}}
         ]
     }.
 
