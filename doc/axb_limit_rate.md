@@ -32,7 +32,11 @@ process, for which the limit should be applied.
 
 
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ask-2">ask/2</a></td><td>
+Same as ask/3, except that the rate matches the one
+passed to start_link/2 when starting the process.</td></tr><tr><td valign="top"><a href="#ask-3">ask/3</a></td><td>
 Ask for execution for permission to proceed.</td></tr><tr><td valign="top"><a href="#await-2">await/2</a></td><td>
+Same as await/3, except that the rate matches the one
+passed to start_link/2 when starting the process.</td></tr><tr><td valign="top"><a href="#await-3">await/3</a></td><td>
 Await for permission to proceed.</td></tr><tr><td valign="top"><a href="#set_rate-2">set_rate/2</a></td><td>
 Set new rate for the limiter.</td></tr><tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td>
 Start the process without registering it.</td></tr><tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>
@@ -52,12 +56,28 @@ ask(Ref::term(), Who::term()) -&gt; ok | {delay, DelayMS::integer()}
 </code></pre>
 <br />
 
+Same as ask/3, except that the rate matches the one
+passed to start_link/2 when starting the process.
+
+<a name="ask-3"></a>
+
+### ask/3 ###
+
+<pre><code>
+ask(Ref::term(), Who::term(), Rate::number() | undefined) -&gt; ok | {delay, DelayMS::integer()}
+</code></pre>
+<br />
+
 Ask for execution for permission to proceed.
 This function does not block, if needed
 it tells the caller to wait.
 
 Here Ref is a reference of the limiter process
-and Who is a name of thing to limit.
+Who is a name of thing to limit and Rate is
+the frequency of the event per second (see
+documentation of start_link/2) or undefined, if
+it matches the Rate passed to start_link/2 when
+starting this process.
 
 <a name="await-2"></a>
 
@@ -68,8 +88,22 @@ await(Ref::term(), Who::term()) -&gt; ok
 </code></pre>
 <br />
 
+Same as await/3, except that the rate matches the one
+passed to start_link/2 when starting the process.
+
+<a name="await-3"></a>
+
+### await/3 ###
+
+<pre><code>
+await(Ref::term(), Who::term(), Rate::number() | undefined) -&gt; ok
+</code></pre>
+<br />
+
 Await for permission to proceed.
 This function will block, if the rate limit is reached.
+
+The parameters matches the ones in ask/3.
 
 <a name="set_rate-2"></a>
 
